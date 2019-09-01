@@ -1,0 +1,29 @@
+plugins {
+  id "org.jetbrains.intellij" version "0.4.10"
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.jetbrains.intellij'
+apply plugin: 'jacoco'
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+intellij {
+  version '2019.2.1'
+  
+  plugins 'java'
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled = true
+    html.enabled = true
+  }
+}
