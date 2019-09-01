@@ -16,20 +16,26 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
 public class HigherKindProvider extends PsiAugmentProvider {
 
+  private static final String HIGHER_KIND = "com.github.tonivade.purefun.HigherKind";
+
   @NotNull
   @Override
   protected <Psi extends PsiElement> List<Psi> getAugments(@NotNull PsiElement element, @NotNull Class<Psi> type) {
     if (element instanceof PsiClass) {
-      if (type == PsiClass.class) {
-        return (List<Psi>) CachedValuesManager.getCachedValue(element, new ClassHigherKindCachedValue((PsiClass) element));
-      }
-      if (type == PsiMethod.class) {
-        return (List<Psi>) CachedValuesManager.getCachedValue(element, new MethodHigherKindCachedValue((PsiClass) element));
+      PsiClass clazz = (PsiClass) element;
+      if (clazz.hasAnnotation(HIGHER_KIND)) {
+        if (type == PsiClass.class) {
+          return (List<Psi>) CachedValuesManager.getCachedValue(clazz, new ClassHigherKindCachedValue(clazz));
+        }
+        if (type == PsiMethod.class) {
+          return (List<Psi>) CachedValuesManager.getCachedValue(clazz, new MethodHigherKindCachedValue(clazz));
+        }
       }
     }
     return Collections.emptyList();
@@ -67,5 +73,16 @@ class HigherKindCachedValue implements CachedValueProvider<List<? extends PsiEle
 
   public Result<List<? extends PsiElement>> process() {
     return Result.create(HigherKindService.getInstance(clazz.getProject()).process(clazz, type), clazz);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) return false;
+    if (this == obj) return true;
+    if (!(obj instanceof HigherKindCachedValue)) {
+      return false;
+    }
+    HigherKindCachedValue other = (HigherKindCachedValue) obj;
+    return Objects.equals(this.clazz, other.clazz);
   }
 }

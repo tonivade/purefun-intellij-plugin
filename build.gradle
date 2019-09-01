@@ -27,3 +27,8 @@ jacocoTestReport {
     html.enabled = true
   }
 }
+
+runIde {
+  jbrVersion '8u202b1483.24'
+}
+

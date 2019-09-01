@@ -73,7 +73,7 @@ public class HigherKindServiceImpl implements HigherKindService {
             result.add(generateNarrowK3Of1(clazz));
             result.add(generateKind3(clazz));
             result.add(generateKind1Of3(clazz));
-            result.add(generateKind1Of2(clazz));
+            result.add(generateKind2Of3(clazz));
           }
         }
       }
