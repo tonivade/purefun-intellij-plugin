@@ -11,13 +11,13 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.augment.PsiAugmentProvider;
 import com.intellij.psi.util.CachedValueProvider;
-import com.intellij.psi.util.CachedValuesManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static com.intellij.psi.util.CachedValuesManager.getCachedValue;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 public class HigherKindProvider extends PsiAugmentProvider {
@@ -31,49 +31,55 @@ public class HigherKindProvider extends PsiAugmentProvider {
       PsiClass clazz = (PsiClass) element;
       if (clazz.hasAnnotation(HIGHER_KIND)) {
         if (type == PsiClass.class) {
-          return (List<Psi>) CachedValuesManager.getCachedValue(clazz, new ClassHigherKindCachedValue(clazz));
+          return (List<Psi>) getCachedValue(clazz, new ClassHigherKindCachedValue(clazz));
         }
         if (type == PsiMethod.class) {
-          return (List<Psi>) CachedValuesManager.getCachedValue(clazz, new MethodHigherKindCachedValue(clazz));
+          return (List<Psi>) getCachedValue(clazz, new MethodHigherKindCachedValue(clazz));
         }
       }
     }
-    return Collections.emptyList();
+    return emptyList();
   }
 }
 
-class ClassHigherKindCachedValue extends HigherKindCachedValue {
+class ClassHigherKindCachedValue extends HigherKindCachedValue<PsiClass> {
   ClassHigherKindCachedValue(PsiClass clazz) {
     super(clazz, PsiClass.class);
   }
-}
 
-class MethodHigherKindCachedValue extends HigherKindCachedValue {
-  MethodHigherKindCachedValue(PsiClass clazz) {
-    super(clazz, PsiMethod.class);
+  @Override
+  protected Result<List<PsiClass>> process(PsiClass clazz) {
+    return Result.create(HigherKindService.getInstance(clazz.getProject()).processClass(clazz), clazz);
   }
 }
 
-class HigherKindCachedValue implements CachedValueProvider<List<? extends PsiElement>> {
+class MethodHigherKindCachedValue extends HigherKindCachedValue<PsiMethod> {
+  MethodHigherKindCachedValue(PsiClass clazz) {
+    super(clazz, PsiMethod.class);
+  }
+
+  @Override
+  protected Result<List<PsiMethod>> process(PsiClass clazz) {
+    return Result.create(HigherKindService.getInstance(clazz.getProject()).processMethod(clazz), clazz);
+  }
+}
+
+abstract class HigherKindCachedValue<P extends PsiElement> implements CachedValueProvider<List<P>> {
 
   private final PsiClass clazz;
-  private final Class<? extends PsiElement> type;
   private final RecursionGuard<PsiClass> recursionGuard;
 
   HigherKindCachedValue(PsiClass clazz, Class<? extends PsiElement> type) {
     this.clazz = requireNonNull(clazz);
-    this.type = requireNonNull(type);
     this.recursionGuard = RecursionManager.createGuard("purefun." + type.getName());
   }
 
   @Override
-  public Result<List<? extends PsiElement>> compute() {
-    return recursionGuard.doPreventingRecursion(clazz, true, this::process);
+  public Result<List<P>> compute() {
+    return recursionGuard.doPreventingRecursion(clazz, true, () -> process(clazz));
   }
 
-  public Result<List<? extends PsiElement>> process() {
-    return Result.create(HigherKindService.getInstance(clazz.getProject()).process(clazz, type), clazz);
-  }
+  protected abstract Result<List<P>> process(PsiClass clazz);
 
   @Override
   public boolean equals(Object obj) {

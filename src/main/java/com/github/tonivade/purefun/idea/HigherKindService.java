@@ -8,6 +8,7 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
 
 import java.util.List;
 
@@ -17,5 +18,6 @@ public interface HigherKindService {
     return ServiceManager.getService(project, HigherKindService.class);
   }
 
-  List<? extends PsiElement> process(PsiClass clazz, Class<? extends PsiElement> type);
+  List<PsiMethod> processMethod(PsiClass clazz);
+  List<PsiClass> processClass(PsiClass clazz);
 }
