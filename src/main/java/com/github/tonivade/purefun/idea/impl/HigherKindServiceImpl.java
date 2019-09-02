@@ -102,7 +102,7 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateNarrowK1(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowK(clazz);
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
 
     LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
     narrowK.addTypeParameter(param1);
@@ -113,7 +113,7 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateNarrowK2(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowK(clazz);
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
 
     LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
     LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
@@ -126,7 +126,7 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateNarrowK2Of1(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowK(clazz);
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
 
     LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
     LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
@@ -139,7 +139,7 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateNarrowK3(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowK(clazz);
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
 
     LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
     LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
@@ -154,7 +154,7 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateNarrowK3Of2(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowK(clazz);
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
 
     LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
     LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
@@ -169,7 +169,7 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateNarrowK3Of1(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowK(clazz);
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
 
     LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
     LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
@@ -183,7 +183,7 @@ public class HigherKindServiceImpl implements HigherKindService {
     return narrowK;
   }
 
-  private LightMethodBuilder createNarrowK(PsiClass clazz) {
+  private LightMethodBuilder createNarrowKMethod(PsiClass clazz) {
     LightMethodBuilder narrowK = new LightMethodBuilder(PsiManager.getInstance(project), NARROW_K);
     narrowK.setContainingClass(clazz);
     narrowK.addModifier(PsiModifier.PUBLIC);
@@ -192,51 +192,32 @@ public class HigherKindServiceImpl implements HigherKindService {
   }
 
   private PsiMethod generateKind1(PsiClass clazz) {
-    LightMethodBuilder kind1 = new LightMethodBuilder(PsiManager.getInstance(project), KIND_1);
-    kind1.addModifier(PsiModifier.PUBLIC);
-    kind1.setContainingClass(clazz);
-    kind1.setMethodReturnType(higher1Of(witnessOf(clazz), clazz.getTypeParameters()[0]));
-    return kind1;
+    return createKindMethod(clazz, KIND_1, higher1Of(witnessOf(clazz), clazz.getTypeParameters()[0]));
   }
 
   private PsiMethod generateKind2(PsiClass clazz) {
-    LightMethodBuilder kind2 = new LightMethodBuilder(PsiManager.getInstance(project), KIND_2);
-    kind2.addModifier(PsiModifier.PUBLIC);
-    kind2.setContainingClass(clazz);
-    kind2.setMethodReturnType(higher2Of(witnessOf(clazz), clazz.getTypeParameters()[0], clazz.getTypeParameters()[1]));
-    return kind2;
+    return createKindMethod(clazz, KIND_2,
+      higher2Of(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1]));
   }
 
   private PsiMethod generateKind1Of2(PsiClass clazz) {
-    LightMethodBuilder kind2 = new LightMethodBuilder(PsiManager.getInstance(project), KIND_1);
-    kind2.addModifier(PsiModifier.PUBLIC);
-    kind2.setContainingClass(clazz);
-    kind2.setMethodReturnType(higher1Of( higher1Of(witnessOf(clazz), clazz.getTypeParameters()[0]), clazz.getTypeParameters()[1]));
-    return kind2;
+    return createKindMethod(clazz, KIND_1,
+      higher2Of1(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1]));
   }
 
   private PsiMethod generateKind3(PsiClass clazz) {
-    LightMethodBuilder kind3 = new LightMethodBuilder(PsiManager.getInstance(project), KIND_3);
-    kind3.addModifier(PsiModifier.PUBLIC);
-    kind3.setContainingClass(clazz);
-    kind3.setMethodReturnType(higher3Of(witnessOf(clazz), clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
-    return kind3;
+    return createKindMethod(clazz, KIND_3,
+      higher3Of(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
   }
 
   private PsiMethod generateKind1Of3(PsiClass clazz) {
-    LightMethodBuilder kind3 = new LightMethodBuilder(PsiManager.getInstance(project), KIND_1);
-    kind3.addModifier(PsiModifier.PUBLIC);
-    kind3.setContainingClass(clazz);
-    kind3.setMethodReturnType(higher1Of(higher1Of(higher1Of(witnessOf(clazz), clazz.getTypeParameters()[0]), clazz.getTypeParameters()[1]), clazz.getTypeParameters()[2]));
-    return kind3;
+    return createKindMethod(clazz, KIND_1,
+      higher3Of1(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
   }
 
   private PsiMethod generateKind2Of3(PsiClass clazz) {
-    LightMethodBuilder kind3 = new LightMethodBuilder(PsiManager.getInstance(project), KIND_2);
-    kind3.addModifier(PsiModifier.PUBLIC);
-    kind3.setContainingClass(clazz);
-    kind3.setMethodReturnType(higher2Of(higher1Of(witnessOf(clazz), clazz.getTypeParameters()[0]), clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
-    return kind3;
+    return createKindMethod(clazz, KIND_2,
+      higher3Of2(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
   }
 
   private PsiClassType returnType1(PsiClass clazz, PsiTypeParameter param1) {
@@ -317,6 +298,14 @@ public class HigherKindServiceImpl implements HigherKindService {
         .put(higher3.getTypeParameters()[2], EMPTY.substitute(type2))
         .put(higher3.getTypeParameters()[3], EMPTY.substitute(type3));
     return factory.createType(higher3, substitutor);
+  }
+
+  private PsiMethod createKindMethod(PsiClass clazz, String name, PsiClassType returnType) {
+    LightMethodBuilder method = new LightMethodBuilder(PsiManager.getInstance(project), name);
+    method.addModifier(PsiModifier.PUBLIC);
+    method.setContainingClass(clazz);
+    method.setMethodReturnType(returnType);
+    return method;
   }
 
   private PsiClassType witnessOf(PsiClass clazz) {
