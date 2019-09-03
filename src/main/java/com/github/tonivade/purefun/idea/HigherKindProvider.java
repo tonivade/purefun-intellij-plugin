@@ -47,6 +47,7 @@ class ClassHigherKindCachedValue extends HigherKindCachedValue<PsiClass> {
     super(clazz, PsiClass.class);
   }
 
+  @NotNull
   @Override
   protected Result<List<PsiClass>> process(PsiClass clazz) {
     return Result.create(HigherKindService.getInstance(clazz.getProject()).processClass(clazz), clazz);
@@ -58,6 +59,7 @@ class MethodHigherKindCachedValue extends HigherKindCachedValue<PsiMethod> {
     super(clazz, PsiMethod.class);
   }
 
+  @NotNull
   @Override
   protected Result<List<PsiMethod>> process(PsiClass clazz) {
     return Result.create(HigherKindService.getInstance(clazz.getProject()).processMethod(clazz), clazz);
@@ -74,6 +76,7 @@ abstract class HigherKindCachedValue<P extends PsiElement> implements CachedValu
     this.recursionGuard = RecursionManager.createGuard("purefun." + type.getName());
   }
 
+  @NotNull
   @Override
   public Result<List<P>> compute() {
     return recursionGuard.doPreventingRecursion(clazz, true, () -> process(clazz));

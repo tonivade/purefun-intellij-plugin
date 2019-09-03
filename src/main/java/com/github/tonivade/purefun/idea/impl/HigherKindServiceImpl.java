@@ -43,40 +43,37 @@ public class HigherKindServiceImpl implements HigherKindService {
     this.project = requireNonNull(project);
   }
 
+  @NotNull
   @Override
   public List<PsiClass> processClass(PsiClass clazz) {
     logger.info("process classes for: {}", clazz.getQualifiedName());
     PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
     if (typeParameters.length > 0) {
-      return newGenerator(project).generateWitness(clazz);
-    }
-    return emptyList();
-  }
-
-  @Override
-  public List<PsiMethod> processMethod(PsiClass clazz) {
-    logger.info("process methods for: {}", clazz.getQualifiedName());
-    PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
-    if (typeParameters.length == 1) {
-      return newGenerator(project).generateHigher1Methods(clazz);
-    }
-    if (typeParameters.length == 2) {
-      return newGenerator(project).generateHigher2Methods(clazz);
-    }
-    if (typeParameters.length == 3) {
-      return newGenerator(project).generateHigher3Methods(clazz);
+      return newGenerator().generateWitness(clazz);
     }
     return emptyList();
   }
 
   @NotNull
-  private static HigherKindGenerator newGenerator(Project project) {
-    return new HigherKindGenerator(
-        PsiElementFactory.getInstance(project),
-        PsiManager.getInstance(project),
-        JavaFileManager.getInstance(project),
-        allScope(project)
-    );
+  @Override
+  public List<PsiMethod> processMethod(PsiClass clazz) {
+    logger.info("process methods for: {}", clazz.getQualifiedName());
+    PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
+    if (typeParameters.length == 1) {
+      return newGenerator().generateHigher1Methods(clazz);
+    }
+    if (typeParameters.length == 2) {
+      return newGenerator().generateHigher2Methods(clazz);
+    }
+    if (typeParameters.length == 3) {
+      return newGenerator().generateHigher3Methods(clazz);
+    }
+    return emptyList();
+  }
+
+  @NotNull
+  private HigherKindGenerator newGenerator() {
+    return new HigherKindGenerator(project);
   }
 }
 
@@ -86,25 +83,23 @@ class HigherKindGenerator {
   private static final String HIGHER1 = "com.github.tonivade.purefun.Higher1";
   private static final String HIGHER2 = "com.github.tonivade.purefun.Higher2";
   private static final String HIGHER3 = "com.github.tonivade.purefun.Higher3";
-  private static final String KIND_1 = "kind1";
-  private static final String KIND_2 = "kind2";
-  private static final String KIND_3 = "kind3";
-  private static final String NARROW_K = "narrowK";
-  private static final String HKT = "hkt";
+  private static final String KIND1 = "kind1";
+  private static final String KIND2 = "kind2";
+  private static final String KIND3 = "kind3";
+  private static final String NARROW_KIND = "narrowK";
+  private static final String HIGHER_KIND_TYPE = "hkt";
+  private static final String WITNESS = "µ";
 
   private final PsiElementFactory factory;
   private final PsiManager psiManager;
   private final JavaFileManager fileManager;
   private final GlobalSearchScope searchScope;
 
-  HigherKindGenerator(PsiElementFactory factory,
-                      PsiManager psiManager,
-                      JavaFileManager fileManager,
-                      GlobalSearchScope searchScope) {
-    this.factory = requireNonNull(factory);
-    this.psiManager = requireNonNull(psiManager);
-    this.fileManager = requireNonNull(fileManager);
-    this.searchScope = requireNonNull(searchScope);
+  HigherKindGenerator(Project project) {
+    this.factory = PsiElementFactory.getInstance(project);
+    this.psiManager = PsiManager.getInstance(project);
+    this.fileManager = JavaFileManager.getInstance(project);
+    this.searchScope = allScope(project);
   }
 
   @NotNull
@@ -139,7 +134,7 @@ class HigherKindGenerator {
 
   @NotNull
   List<PsiClass> generateWitness(PsiClass clazz) {
-    LightPsiClassBuilder witness = new LightPsiClassBuilder(clazz, "µ");
+    LightPsiClassBuilder witness = new LightPsiClassBuilder(clazz, WITNESS);
     witness.setContainingClass(clazz);
     witness.getModifierList().addModifier(PsiModifier.PUBLIC);
     witness.getModifierList().addModifier(PsiModifier.STATIC);
@@ -148,199 +143,185 @@ class HigherKindGenerator {
     return singletonList(witness);
   }
 
+  @NotNull
   private PsiMethod generateNarrowK1(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
-
-    LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
-    narrowK.addTypeParameter(param1);
-
-    narrowK.setMethodReturnType(returnType1(clazz, param1));
-    narrowK.addParameter(HKT, higher1Of(clazz, param1));
+    LightMethodBuilder narrowK = createNarrowK1(clazz);
+    narrowK.setMethodReturnType(returnType1(clazz, narrowK.getTypeParameters()));
+    narrowK.addParameter(HIGHER_KIND_TYPE, higher1Of(clazz, narrowK.getTypeParameters()));
     return narrowK;
   }
 
+  @NotNull
   private PsiMethod generateNarrowK2(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
-
-    LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
-    LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
-    narrowK.addTypeParameter(param1);
-    narrowK.addTypeParameter(param2);
-
-    narrowK.setMethodReturnType(returnType2(clazz, param1, param2));
-    narrowK.addParameter(HKT, higher2Of(clazz, param1, param2));
+    LightMethodBuilder narrowK = createNarrowK2(clazz);
+    narrowK.setMethodReturnType(returnType2(clazz, narrowK.getTypeParameters()));
+    narrowK.addParameter(HIGHER_KIND_TYPE, higher2Of(clazz, narrowK.getTypeParameters()));
     return narrowK;
   }
 
+  @NotNull
   private PsiMethod generateNarrowK2Of1(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
-
-    LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
-    LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
-    narrowK.addTypeParameter(param1);
-    narrowK.addTypeParameter(param2);
-
-    narrowK.setMethodReturnType(returnType2(clazz, param1, param2));
-    narrowK.addParameter(HKT, higher2Of1(clazz, param1, param2));
+    LightMethodBuilder narrowK = createNarrowK2(clazz);
+    narrowK.setMethodReturnType(returnType2(clazz, narrowK.getTypeParameters()));
+    narrowK.addParameter(HIGHER_KIND_TYPE, higher2Of1(clazz, narrowK.getTypeParameters()));
     return narrowK;
   }
 
+  @NotNull
   private PsiMethod generateNarrowK3(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
-
-    LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
-    LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
-    LightTypeParameterBuilder param3 = new LightTypeParameterBuilder("C", narrowK, 2);
-    narrowK.addTypeParameter(param1);
-    narrowK.addTypeParameter(param2);
-    narrowK.addTypeParameter(param3);
-
-    narrowK.setMethodReturnType(returnType3(clazz, param1, param2, param3));
-    narrowK.addParameter(HKT, higher3Of(clazz, param1, param2, param3));
+    LightMethodBuilder narrowK = createNarrowK3(clazz);
+    narrowK.setMethodReturnType(returnType3(clazz, narrowK.getTypeParameters()));
+    narrowK.addParameter(HIGHER_KIND_TYPE, higher3Of(clazz, narrowK.getTypeParameters()));
     return narrowK;
   }
 
+  @NotNull
   private PsiMethod generateNarrowK3Of2(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
-
-    LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
-    LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
-    LightTypeParameterBuilder param3 = new LightTypeParameterBuilder("C", narrowK, 2);
-    narrowK.addTypeParameter(param1);
-    narrowK.addTypeParameter(param2);
-    narrowK.addTypeParameter(param3);
-
-    narrowK.setMethodReturnType(returnType3(clazz, param1, param2, param3));
-    narrowK.addParameter(HKT, higher3Of2(clazz, param1, param2, param3));
+    LightMethodBuilder narrowK = createNarrowK3(clazz);
+    narrowK.setMethodReturnType(returnType3(clazz, narrowK.getTypeParameters()));
+    narrowK.addParameter(HIGHER_KIND_TYPE, higher3Of2(clazz, narrowK.getTypeParameters()));
     return narrowK;
   }
 
+  @NotNull
   private PsiMethod generateNarrowK3Of1(PsiClass clazz) {
-    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
-
-    LightTypeParameterBuilder param1 = new LightTypeParameterBuilder("A", narrowK, 0);
-    LightTypeParameterBuilder param2 = new LightTypeParameterBuilder("B", narrowK, 1);
-    LightTypeParameterBuilder param3 = new LightTypeParameterBuilder("C", narrowK, 2);
-    narrowK.addTypeParameter(param1);
-    narrowK.addTypeParameter(param2);
-    narrowK.addTypeParameter(param3);
-
-    narrowK.setMethodReturnType(returnType3(clazz, param1, param2, param3));
-    narrowK.addParameter(HKT, higher3Of1(clazz, param1, param2, param3));
+    LightMethodBuilder narrowK = createNarrowK3(clazz);
+    narrowK.setMethodReturnType(returnType3(clazz, narrowK.getTypeParameters()));
+    narrowK.addParameter(HIGHER_KIND_TYPE, higher3Of1(clazz, narrowK.getTypeParameters()));
     return narrowK;
   }
 
+  @NotNull
   private LightMethodBuilder createNarrowKMethod(PsiClass clazz) {
-    LightMethodBuilder narrowK = new LightMethodBuilder(psiManager, NARROW_K);
+    LightMethodBuilder narrowK = new LightMethodBuilder(psiManager, NARROW_KIND);
     narrowK.setContainingClass(clazz);
     narrowK.addModifier(PsiModifier.PUBLIC);
     narrowK.addModifier(PsiModifier.STATIC);
     return narrowK;
   }
 
+  @NotNull
   private PsiMethod generateKind1(PsiClass clazz) {
-    return createKindMethod(clazz, KIND_1, higher1Of(witnessOf(clazz), clazz.getTypeParameters()[0]));
+    return createKindMethod(clazz, KIND1, higher1Of(clazz, clazz.getTypeParameters()));
   }
 
+  @NotNull
   private PsiMethod generateKind2(PsiClass clazz) {
-    return createKindMethod(clazz, KIND_2,
-        higher2Of(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1]));
+    return createKindMethod(clazz, KIND2, higher2Of(clazz, clazz.getTypeParameters()));
   }
 
+  @NotNull
   private PsiMethod generateKind1Of2(PsiClass clazz) {
-    return createKindMethod(clazz, KIND_1,
-        higher2Of1(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1]));
+    return createKindMethod(clazz, KIND1, higher2Of1(clazz, clazz.getTypeParameters()));
   }
 
+  @NotNull
   private PsiMethod generateKind3(PsiClass clazz) {
-    return createKindMethod(clazz, KIND_3,
-        higher3Of(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
+    return createKindMethod(clazz, KIND3, higher3Of(clazz, clazz.getTypeParameters()));
   }
 
+  @NotNull
   private PsiMethod generateKind1Of3(PsiClass clazz) {
-    return createKindMethod(clazz, KIND_1,
-        higher3Of1(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
+    return createKindMethod(clazz, KIND1, higher3Of1(clazz, clazz.getTypeParameters()));
   }
 
+  @NotNull
   private PsiMethod generateKind2Of3(PsiClass clazz) {
-    return createKindMethod(clazz, KIND_2,
-        higher3Of2(clazz, clazz.getTypeParameters()[0], clazz.getTypeParameters()[1], clazz.getTypeParameters()[2]));
+    return createKindMethod(clazz, KIND2, higher3Of2(clazz, clazz.getTypeParameters()));
   }
 
-  private PsiClassType returnType1(PsiClass clazz, PsiTypeParameter param1) {
-    PsiSubstitutor substitutor = EMPTY.put(clazz.getTypeParameters()[0], EMPTY.substitute(param1));
+  @NotNull
+  private PsiClassType returnType1(PsiClass clazz, PsiTypeParameter[] params) {
+    PsiSubstitutor substitutor = EMPTY.put(clazz.getTypeParameters()[0], EMPTY.substitute(params[0]));
     return factory.createType(clazz, substitutor);
   }
 
-  private PsiClassType returnType2(PsiClass clazz, PsiTypeParameter param1, PsiTypeParameter param2) {
+  @NotNull
+  private PsiClassType returnType2(PsiClass clazz, PsiTypeParameter[] params) {
     PsiSubstitutor substitutor = EMPTY
-        .put(clazz.getTypeParameters()[0], EMPTY.substitute(param1))
-        .put(clazz.getTypeParameters()[1], EMPTY.substitute(param2));
+        .put(clazz.getTypeParameters()[0], EMPTY.substitute(params[0]))
+        .put(clazz.getTypeParameters()[1], EMPTY.substitute(params[1]));
     return factory.createType(clazz, substitutor);
   }
 
-  private PsiClassType returnType3(PsiClass clazz, PsiTypeParameter param1, PsiTypeParameter param2, PsiTypeParameter param3) {
+  @NotNull
+  private PsiClassType returnType3(PsiClass clazz, PsiTypeParameter[] params) {
     PsiSubstitutor substitutor = EMPTY
-        .put(clazz.getTypeParameters()[0], EMPTY.substitute(param1))
-        .put(clazz.getTypeParameters()[1], EMPTY.substitute(param2))
-        .put(clazz.getTypeParameters()[2], EMPTY.substitute(param3));
+        .put(clazz.getTypeParameters()[0], EMPTY.substitute(params[0]))
+        .put(clazz.getTypeParameters()[1], EMPTY.substitute(params[1]))
+        .put(clazz.getTypeParameters()[2], EMPTY.substitute(params[2]));
     return factory.createType(clazz, substitutor);
   }
 
-  private PsiClassType higher1Of(PsiClass clazz, PsiTypeParameter param1) {
-    return higher1Of(witnessOf(clazz), param1);
+  @NotNull
+  private PsiClassType higher1Of(PsiClass clazz, PsiTypeParameter[] params) {
+    return higher1Of(witnessOf(clazz), params[0]);
   }
 
-  private PsiClassType higher2Of(PsiClass clazz, PsiTypeParameter param1, PsiTypeParameter param2) {
-    return higher2Of(witnessOf(clazz), param1, param2);
+  @NotNull
+  private PsiClassType higher2Of(PsiClass clazz, PsiTypeParameter[] params) {
+    return higher2Of(witnessOf(clazz), params[0], params[1]);
   }
 
-  private PsiClassType higher2Of1(PsiClass clazz, PsiTypeParameter param1, PsiTypeParameter param2) {
-    return higher1Of(higher1Of(witnessOf(clazz), param1), param2);
+  @NotNull
+  private PsiClassType higher2Of1(PsiClass clazz, PsiTypeParameter[] params) {
+    return higher1Of(higher1Of(witnessOf(clazz), params[0]), params[1]);
   }
 
-  private PsiClassType higher3Of(PsiClass clazz, PsiTypeParameter type1, PsiTypeParameter type2, PsiTypeParameter type3) {
-    return higher3Of(witnessOf(clazz), type1, type2, type3);
+  @NotNull
+  private PsiClassType higher3Of(PsiClass clazz, PsiTypeParameter[] params) {
+    return higher3Of(witnessOf(clazz), params[0], params[1], params[2]);
   }
 
-  private PsiClassType higher3Of2(PsiClass clazz, PsiTypeParameter type1, PsiTypeParameter type2, PsiTypeParameter type3) {
-    return higher2Of(higher1Of(witnessOf(clazz), type1), type2, type3);
+  @NotNull
+  private PsiClassType higher3Of2(PsiClass clazz, PsiTypeParameter[] params) {
+    return higher2Of(higher1Of(witnessOf(clazz), params[0]), params[1], params[2]);
   }
 
-  private PsiClassType higher3Of1(PsiClass clazz, PsiTypeParameter type1, PsiTypeParameter type2, PsiTypeParameter type3) {
-    return higher1Of(higher1Of(higher1Of(witnessOf(clazz), type1), type2), type3);
+  @NotNull
+  private PsiClassType higher3Of1(PsiClass clazz, PsiTypeParameter[] params) {
+    return higher1Of(higher1Of(higher1Of(witnessOf(clazz), params[0]), params[1]), params[2]);
   }
 
-  private PsiClassType higher1Of(PsiType witness, PsiTypeParameter type) {
+  @NotNull
+  private PsiClassType witnessOf(PsiClass clazz) {
+    return factory.createTypeByFQClassName(clazz.getQualifiedName() + "." + WITNESS, searchScope);
+  }
+
+  @NotNull
+  private PsiClassType higher1Of(PsiType witness, PsiTypeParameter param1) {
     PsiClass higher1 = fileManager.findClass(HIGHER1, searchScope);
     PsiSubstitutor substitutor =
         EMPTY
             .put(higher1.getTypeParameters()[0], EMPTY.substitute(witness))
-            .put(higher1.getTypeParameters()[1], EMPTY.substitute(type));
+            .put(higher1.getTypeParameters()[1], EMPTY.substitute(param1));
     return factory.createType(higher1, substitutor);
   }
 
-  private PsiClassType higher2Of(PsiType witness, PsiTypeParameter type1, PsiTypeParameter type2) {
+  @NotNull
+  private PsiClassType higher2Of(PsiType witness, PsiTypeParameter param1, PsiTypeParameter param2) {
     PsiClass higher2 = fileManager.findClass(HIGHER2, searchScope);
     PsiSubstitutor substitutor =
         EMPTY
             .put(higher2.getTypeParameters()[0], EMPTY.substitute(witness))
-            .put(higher2.getTypeParameters()[1], EMPTY.substitute(type1))
-            .put(higher2.getTypeParameters()[2], EMPTY.substitute(type2));
+            .put(higher2.getTypeParameters()[1], EMPTY.substitute(param1))
+            .put(higher2.getTypeParameters()[2], EMPTY.substitute(param2));
     return factory.createType(higher2, substitutor);
   }
 
-  private PsiClassType higher3Of(PsiType witness, PsiTypeParameter type1, PsiTypeParameter type2, PsiTypeParameter type3) {
+  @NotNull
+  private PsiClassType higher3Of(PsiType witness, PsiTypeParameter param1, PsiTypeParameter param2, PsiTypeParameter param3) {
     PsiClass higher3 = fileManager.findClass(HIGHER3, searchScope);
     PsiSubstitutor substitutor =
         EMPTY
             .put(higher3.getTypeParameters()[0], EMPTY.substitute(witness))
-            .put(higher3.getTypeParameters()[1], EMPTY.substitute(type1))
-            .put(higher3.getTypeParameters()[2], EMPTY.substitute(type2))
-            .put(higher3.getTypeParameters()[3], EMPTY.substitute(type3));
+            .put(higher3.getTypeParameters()[1], EMPTY.substitute(param1))
+            .put(higher3.getTypeParameters()[2], EMPTY.substitute(param2))
+            .put(higher3.getTypeParameters()[3], EMPTY.substitute(param3));
     return factory.createType(higher3, substitutor);
   }
 
+  @NotNull
   private PsiMethod createKindMethod(PsiClass clazz, String name, PsiClassType returnType) {
     LightMethodBuilder method = new LightMethodBuilder(psiManager, name);
     method.addModifier(PsiModifier.PUBLIC);
@@ -349,7 +330,27 @@ class HigherKindGenerator {
     return method;
   }
 
-  private PsiClassType witnessOf(PsiClass clazz) {
-    return factory.createTypeByFQClassName(clazz.getQualifiedName() + ".µ", searchScope);
+  @NotNull
+  private LightMethodBuilder createNarrowK1(PsiClass clazz) {
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
+    narrowK.addTypeParameter(new LightTypeParameterBuilder("A", narrowK, 0));
+    return narrowK;
+  }
+
+  @NotNull
+  private LightMethodBuilder createNarrowK2(PsiClass clazz) {
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
+    narrowK.addTypeParameter(new LightTypeParameterBuilder("A", narrowK, 0));
+    narrowK.addTypeParameter(new LightTypeParameterBuilder("B", narrowK, 1));
+    return narrowK;
+  }
+
+  @NotNull
+  private LightMethodBuilder createNarrowK3(PsiClass clazz) {
+    LightMethodBuilder narrowK = createNarrowKMethod(clazz);
+    narrowK.addTypeParameter(new LightTypeParameterBuilder("A", narrowK, 0));
+    narrowK.addTypeParameter(new LightTypeParameterBuilder("B", narrowK, 1));
+    narrowK.addTypeParameter(new LightTypeParameterBuilder("C", narrowK, 2));
+    return narrowK;
   }
 }
