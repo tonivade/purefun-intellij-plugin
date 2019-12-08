@@ -16,7 +16,7 @@ sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
 intellij {
-  version '2019.2.1'
+  version '2019.3'
   
   plugins 'java'
 }
