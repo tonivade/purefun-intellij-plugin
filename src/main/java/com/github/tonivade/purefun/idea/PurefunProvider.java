@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
+ * Copyright (c) 2019-2020, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
  * Distributed under the terms of the MIT License
  */
 package com.github.tonivade.purefun.idea;
@@ -20,9 +20,10 @@ import static com.intellij.psi.util.CachedValuesManager.getCachedValue;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
-public class HigherKindProvider extends PsiAugmentProvider {
+public class PurefunProvider extends PsiAugmentProvider {
 
   private static final String HIGHER_KIND = "com.github.tonivade.purefun.HigherKind";
+  private static final String INSTANCE = "com.github.tonivade.purefun.Instance";
 
   @NotNull
   @Override
@@ -35,6 +36,10 @@ public class HigherKindProvider extends PsiAugmentProvider {
         }
         if (type == PsiMethod.class) {
           return (List<Psi>) getCachedValue(clazz, new MethodHigherKindCachedValue(clazz));
+        }
+      } else if (clazz.hasAnnotation(INSTANCE)) {
+        if (type == PsiMethod.class) {
+          return (List<Psi>) getCachedValue(clazz, new MethodInstanceCachedValue(clazz));
         }
       }
     }
@@ -51,6 +56,18 @@ class ClassHigherKindCachedValue extends HigherKindCachedValue<PsiClass> {
   @Override
   protected Result<List<PsiClass>> process(PsiClass clazz) {
     return Result.create(HigherKindService.getInstance(clazz.getProject()).processClass(clazz), clazz);
+  }
+}
+
+class MethodInstanceCachedValue extends HigherKindCachedValue<PsiMethod> {
+
+  MethodInstanceCachedValue(PsiClass clazz) {
+    super(clazz, PsiMethod.class);
+  }
+
+  @Override
+  protected Result<List<PsiMethod>> process(PsiClass clazz) {
+    return Result.create(InstanceService.getInstance(clazz.getProject()).processMethod(clazz), clazz);
   }
 }
 

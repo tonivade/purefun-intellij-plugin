@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.github.tonivade.purefun.plugin.id</id>
   <name>Purefun Higher Kind Support</name>
-  <version>1.0</version>
+  <version>1.1</version>
   <vendor email="antoniogmc@gmail.com" url="http://github.com/tonivade">tonivade</vendor>
 
   <description><![CDATA[
@@ -11,7 +11,9 @@
   <category>Tools Integration</category>
 
   <change-notes><![CDATA[
-        First development version
+        1.1 First maintenance version
+          - Support for @Instance annotations
+        1.0 First development version
           - Support for @HigherKind annotations
     ]]>
   </change-notes>
@@ -28,11 +30,14 @@
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
     <projectService
+      serviceInterface="com.github.tonivade.purefun.idea.InstanceService"
+      serviceImplementation="com.github.tonivade.purefun.idea.impl.InstanceServiceImpl"/>
+    <projectService
       serviceInterface="com.github.tonivade.purefun.idea.HigherKindService"
       serviceImplementation="com.github.tonivade.purefun.idea.impl.HigherKindServiceImpl"/>
 
     <lang.psiAugmentProvider
-      implementation="com.github.tonivade.purefun.idea.HigherKindProvider"/>
+      implementation="com.github.tonivade.purefun.idea.PurefunProvider"/>
   </extensions>
 
   <actions>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
+ * Copyright (c) 2019-2020, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
  * Distributed under the terms of the MIT License
  */
 package com.github.tonivade.purefun.idea.impl;
@@ -45,7 +45,7 @@ public class HigherKindServiceImpl implements HigherKindService {
 
   @NotNull
   @Override
-  public List<PsiClass> processClass(PsiClass clazz) {
+  public List<PsiClass> processClass(@NotNull PsiClass clazz) {
     logger.info("process classes for: {}", clazz.getQualifiedName());
     PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
     if (typeParameters.length > 0) {
@@ -56,7 +56,7 @@ public class HigherKindServiceImpl implements HigherKindService {
 
   @NotNull
   @Override
-  public List<PsiMethod> processMethod(PsiClass clazz) {
+  public List<PsiMethod> processMethod(@NotNull PsiClass clazz) {
     logger.info("process methods for: {}", clazz.getQualifiedName());
     PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
     if (typeParameters.length == 1) {
