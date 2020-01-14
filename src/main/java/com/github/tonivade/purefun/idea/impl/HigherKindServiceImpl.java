@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.intellij.psi.PsiSubstitutor.EMPTY;
 import static com.intellij.psi.search.GlobalSearchScope.allScope;
@@ -48,6 +49,10 @@ public class HigherKindServiceImpl implements HigherKindService {
   public List<PsiClass> processClass(@NotNull PsiClass clazz) {
     logger.info("process classes for: {}", clazz.getQualifiedName());
     PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
+    if (alreadyDefined(clazz)) {
+      logger.info("witness already defined: {}", clazz.getQualifiedName());
+      return emptyList();
+    }
     if (typeParameters.length > 0) {
       return newGenerator().generateWitness(clazz);
     }
@@ -59,6 +64,10 @@ public class HigherKindServiceImpl implements HigherKindService {
   public List<PsiMethod> processMethod(@NotNull PsiClass clazz) {
     logger.info("process methods for: {}", clazz.getQualifiedName());
     PsiTypeParameter[] typeParameters = clazz.getTypeParameters();
+    if (alreadyDefined(clazz)) {
+      logger.warn("higher kind methods already defined: {}", clazz.getQualifiedName());
+      return emptyList();
+    }
     if (typeParameters.length == 1) {
       return newGenerator().generateHigher1Methods(clazz);
     }
@@ -69,6 +78,13 @@ public class HigherKindServiceImpl implements HigherKindService {
       return newGenerator().generateHigher3Methods(clazz);
     }
     return emptyList();
+  }
+
+  private boolean alreadyDefined(@NotNull PsiClass clazz) {
+    return Stream.concat(Stream.of(clazz.getSuperTypes()), Stream.of(clazz.getImplementsListTypes()))
+        .anyMatch(type -> type.getClassName().equals("Higher1")
+            || type.getClassName().equals("Higher2")
+            || type.getClassName().equals("Higher3"));
   }
 
   @NotNull

@@ -34,11 +34,11 @@ public class PurefunProvider extends PsiAugmentProvider {
       if (clazz.hasAnnotation(HIGHER_KIND)) {
         if (type == PsiClass.class) {
           return (List<Psi>) getCachedValue(clazz, new ClassAbstractCachedValue(clazz));
-        }
-        if (type == PsiMethod.class) {
+        } else if (type == PsiMethod.class) {
           return (List<Psi>) getCachedValue(clazz, new MethodAbstractCachedValue(clazz));
         }
-      } else if (clazz.hasAnnotation(INSTANCE)) {
+      }
+      if (clazz.hasAnnotation(INSTANCE)) {
         if (type == PsiMethod.class) {
           return (List<Psi>) getCachedValue(clazz, new MethodInstanceCachedValue(clazz));
         }

@@ -23,10 +23,13 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 import static com.intellij.psi.PsiSubstitutor.EMPTY;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 
 public class InstanceServiceImpl implements InstanceService {
+
+  private static final String INSTANCE = "INSTANCE";
 
   private final Logger logger = LoggerFactory.getLogger(InstanceServiceImpl.class);
 
@@ -40,7 +43,15 @@ public class InstanceServiceImpl implements InstanceService {
   @NotNull
   public List<PsiMethod> processMethod(@NotNull PsiClass clazz) {
     logger.info("process classes for: {}", clazz.getQualifiedName());
+    if (alreadyDefined(clazz)) {
+      logger.info("instance already defined: {}", clazz.getQualifiedName());
+      return emptyList();
+    }
     return singletonList(new InstanceGenerator(project).generateMethod(clazz));
+  }
+
+  private boolean alreadyDefined(@NotNull PsiClass clazz) {
+    return clazz.findFieldByName(INSTANCE, true) != null;
   }
 }
 
