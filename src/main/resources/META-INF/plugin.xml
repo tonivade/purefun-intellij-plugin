@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>com.github.tonivade.purefun.plugin.id</id>
   <name>Purefun Higher Kind Support</name>
-  <version>1.1</version>
+  <version>1.2</version>
   <vendor email="antoniogmc@gmail.com" url="http://github.com/tonivade">tonivade</vendor>
 
   <description><![CDATA[
@@ -11,6 +11,8 @@
   <category>Tools Integration</category>
 
   <change-notes><![CDATA[
+        1.2 Maintenance version
+          - Support for 2020.1 version
         1.1 First maintenance version
           - Support for @Instance annotations
         1.0 First development version
@@ -19,7 +21,7 @@
   </change-notes>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="193.0"/>
+  <idea-version since-build="201.0"/>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
