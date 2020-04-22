@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.intellij.psi.PsiSubstitutor.EMPTY;
-import static com.intellij.psi.search.GlobalSearchScope.allScope;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -115,7 +114,7 @@ class HigherKindGenerator {
     this.factory = PsiElementFactory.getInstance(project);
     this.psiManager = PsiManager.getInstance(project);
     this.fileManager = JavaFileManager.getInstance(project);
-    this.searchScope = allScope(project);
+    this.searchScope = GlobalSearchScope.allScope(project);
   }
 
   @NotNull
@@ -301,7 +300,7 @@ class HigherKindGenerator {
 
   @NotNull
   private PsiClassType witnessOf(PsiClass clazz) {
-    return factory.createTypeByFQClassName(clazz.getQualifiedName() + "." + WITNESS, searchScope);
+    return factory.createTypeByFQClassName(clazz.getQualifiedName() + "." + WITNESS, clazz.getResolveScope());
   }
 
   @NotNull

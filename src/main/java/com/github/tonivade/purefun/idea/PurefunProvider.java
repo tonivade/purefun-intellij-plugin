@@ -33,9 +33,9 @@ public class PurefunProvider extends PsiAugmentProvider {
       PsiClass clazz = (PsiClass) element;
       if (clazz.hasAnnotation(HIGHER_KIND)) {
         if (type == PsiClass.class) {
-          return (List<Psi>) getCachedValue(clazz, new ClassAbstractCachedValue(clazz));
+          return (List<Psi>) getCachedValue(clazz, new ClassCachedValue(clazz));
         } else if (type == PsiMethod.class) {
-          return (List<Psi>) getCachedValue(clazz, new MethodAbstractCachedValue(clazz));
+          return (List<Psi>) getCachedValue(clazz, new MethodHigherKindCachedValue(clazz));
         }
       }
       if (clazz.hasAnnotation(INSTANCE)) {
@@ -48,8 +48,8 @@ public class PurefunProvider extends PsiAugmentProvider {
   }
 }
 
-class ClassAbstractCachedValue extends AbstractCachedValue<PsiClass> {
-  ClassAbstractCachedValue(PsiClass clazz) {
+class ClassCachedValue extends AbstractCachedValue<PsiClass> {
+  ClassCachedValue(PsiClass clazz) {
     super(clazz, PsiClass.class);
   }
 
@@ -72,8 +72,8 @@ class MethodInstanceCachedValue extends AbstractCachedValue<PsiMethod> {
   }
 }
 
-class MethodAbstractCachedValue extends AbstractCachedValue<PsiMethod> {
-  MethodAbstractCachedValue(PsiClass clazz) {
+class MethodHigherKindCachedValue extends AbstractCachedValue<PsiMethod> {
+  MethodHigherKindCachedValue(PsiClass clazz) {
     super(clazz, PsiMethod.class);
   }
 
@@ -106,7 +106,7 @@ abstract class AbstractCachedValue<P extends PsiElement> implements CachedValueP
   public boolean equals(Object obj) {
     if (obj == null) return false;
     if (this == obj) return true;
-    if (!(obj instanceof AbstractCachedValue)) {
+    if (!this.getClass().isInstance(obj)) {
       return false;
     }
     AbstractCachedValue other = (AbstractCachedValue) obj;
