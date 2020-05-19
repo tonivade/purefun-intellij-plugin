@@ -1,2 +1,2 @@
-# purefun-intellij-plugin
+# purefun-intellij-plugin (deprecated)
 Plugin for purefun development
